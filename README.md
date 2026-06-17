@@ -512,7 +512,7 @@ Yes. In single-chat mode all messages go to `TG_CHAT_ID`. In ZITADEL mode the de
 
 ## 📄 License
 
-MIT
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## 🙌 Credits
 
