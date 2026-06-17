@@ -22,14 +22,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def build_tls_context(config: AppConfig):
-    if not config.smtp_auth_require_tls:
+    if not config.smtp_tls_enabled:
         return None
 
     if config.smtp_tls_cert_file is None:
-        raise RuntimeError("SMTP_TLS_CERT_FILE is required when SMTP_AUTH_REQUIRE_TLS=true")
+        raise RuntimeError("SMTP_TLS_CERT_FILE is required when SMTP_TLS_ENABLED=true")
 
     if config.smtp_tls_key_file is None:
-        raise RuntimeError("SMTP_TLS_KEY_FILE is required when SMTP_AUTH_REQUIRE_TLS=true")
+        raise RuntimeError("SMTP_TLS_KEY_FILE is required when SMTP_TLS_ENABLED=true")
 
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
 

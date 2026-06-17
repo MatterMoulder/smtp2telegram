@@ -17,6 +17,7 @@ class AppConfig:
     smtp_username: str
     smtp_password: str
     smtp_auth_required: bool
+    smtp_tls_enabled: bool
     smtp_auth_require_tls: bool
     smtp_require_starttls: bool
     smtp_tls_cert_file: str | None
@@ -89,18 +90,19 @@ def load_config() -> AppConfig:
         smtp_username=os.environ.get("SMTP_USERNAME", ""),
         smtp_password=os.environ.get("SMTP_PASSWORD", ""),
         smtp_auth_required=get_bool_env("SMTP_AUTH_REQUIRED", True),
+        smtp_tls_enabled = get_bool_env("SMTP_TLS_ENABLED", False),
         smtp_auth_require_tls=get_bool_env("SMTP_AUTH_REQUIRE_TLS", False),
         smtp_require_starttls=get_bool_env("SMTP_REQUIRE_STARTTLS", False),
 
         smtp_tls_cert_file = (
             get_required_file_path_env("SMTP_TLS_CERT_FILE")
-            if get_bool_env("SMTP_AUTH_REQUIRE_TLS", False)
+            if get_bool_env("SMTP_TLS_ENABLED", False)
             else None
         ),
 
         smtp_tls_key_file = (
             get_required_file_path_env("SMTP_TLS_KEY_FILE")
-            if get_bool_env("SMTP_AUTH_REQUIRE_TLS", False)
+            if get_bool_env("SMTP_TLS_ENABLED", False)
             else None
         ),
 
