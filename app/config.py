@@ -18,6 +18,9 @@ class AppConfig:
     smtp_password: str
     smtp_auth_required: bool
     smtp_auth_require_tls: bool
+    smtp_require_starttls: bool
+    smtp_tls_cert_file: str | None
+    smtp_tls_key_file: str | None
 
     allowed_networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network]
 
@@ -87,6 +90,19 @@ def load_config() -> AppConfig:
         smtp_password=os.environ.get("SMTP_PASSWORD", ""),
         smtp_auth_required=get_bool_env("SMTP_AUTH_REQUIRED", True),
         smtp_auth_require_tls=get_bool_env("SMTP_AUTH_REQUIRE_TLS", False),
+        smtp_require_starttls=get_bool_env("SMTP_REQUIRE_STARTTLS", False),
+
+        smtp_tls_cert_file = (
+            get_required_file_path_env("SMTP_TLS_CERT_FILE")
+            if get_bool_env("SMTP_AUTH_REQUIRE_TLS", False)
+            else None
+        ),
+
+        smtp_tls_key_file = (
+            get_required_file_path_env("SMTP_TLS_KEY_FILE")
+            if get_bool_env("SMTP_AUTH_REQUIRE_TLS", False)
+            else None
+        ),
 
         allowed_networks=parse_networks(
             os.environ.get(
