@@ -1,3 +1,4 @@
 aiosmtpd==1.4.6
 aiogram==3.29.0
 zitadel_client==4.1.7
+beautifulsoup4

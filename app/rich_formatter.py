@@ -199,6 +199,28 @@ def format_action_block(title: str, kind: str, otp: str | None, body: str) -> st
 
     return "\n".join(lines)
 
+def format_links_details(text: str) -> str:
+    links = extract_links(text)
+
+    if not links:
+        return ""
+
+    items = []
+
+    for index, link in enumerate(links, start=1):
+        url = html.escape(link.url, quote=True)
+        label = html.escape(link.label)
+        items.append(f'<li>{index}. <a href="{url}">{label}</a></li>')
+
+    return f"""
+<details>
+  <summary>Links ({len(links)})</summary>
+  <ul>
+    {''.join(items)}
+  </ul>
+</details>
+""".strip()
+
 def build_rich_html(mail: ParsedMail) -> str:
     body = mail.body[:MAX_BODY_CHARS]
     preview = body[:PREVIEW_CHARS] if body else "(empty body)"
@@ -223,8 +245,9 @@ def build_rich_html(mail: ParsedMail) -> str:
         if row
     )
 
+    links_html = format_links_details(body)
+    print(links_html)
     action_block = format_action_block(title, kind, otp, body)
-    links_block = format_links_block(body)
     attachments_html = format_attachments(mail.attachments)
 
     return f"""
@@ -243,7 +266,7 @@ def build_rich_html(mail: ParsedMail) -> str:
   <p>{h(preview)}</p>
 </blockquote>
 
-{links_block}
+{links_html}
 
 <details>
   <summary>Full body</summary>
