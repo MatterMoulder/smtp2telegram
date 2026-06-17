@@ -3,6 +3,7 @@ from __future__ import annotations
 import email
 import html
 import re
+from bs4 import BeautifulSoup
 from dataclasses import dataclass, field
 from email.header import decode_header, make_header
 from email.message import EmailMessage, Message
@@ -117,10 +118,11 @@ def _decode_payload(part: Message) -> str:
 def extract_body(msg: Message) -> tuple[str, str]:
     """
     Prefer text/plain.
-    Fallback to text/html converted into plain text.
+    If text/html exists, preserve links from HTML and append them to plain text.
     """
 
     if msg.is_multipart():
+        text_body: str | None = None
         html_body: str | None = None
 
         for part in msg.walk():
@@ -132,23 +134,34 @@ def extract_body(msg: Message) -> tuple[str, str]:
 
             if content_type == "text/plain":
                 text = _decode_payload(part).strip()
-                if text:
-                    return text, "text/plain"
+                if text and text_body is None:
+                    text_body = text
 
-            if content_type == "text/html":
+            elif content_type == "text/html":
                 text = _decode_payload(part)
-                if text:
+                if text and html_body is None:
                     html_body = text
 
+        if text_body:
+            if html_body:
+                html_text = html_to_text_with_links(html_body)
+
+                if "Links:" in html_text and "Links:" not in text_body:
+                    links_part = html_text.split("Links:", 1)[1].strip()
+                    if links_part:
+                        text_body += "\n\nLinks:\n" + links_part
+
+            return text_body, "text/plain"
+
         if html_body:
-            return simple_html_to_text(html_body), "text/html"
+            return html_to_text_with_links(html_body), "text/html"
 
         return "", "empty"
 
     content_type = msg.get_content_type()
 
     if content_type == "text/html":
-        return simple_html_to_text(_decode_payload(msg)), "text/html"
+        return html_to_text_with_links(_decode_payload(msg)), "text/html"
 
     return _decode_payload(msg).strip(), content_type or "unknown"
 
@@ -206,3 +219,33 @@ def parse_mail(
         body_source=body_source,
         attachments=extract_attachments(msg),
     )
+
+def html_to_text_with_links(html_body: str) -> str:
+    soup = BeautifulSoup(html_body or "", "html.parser")
+
+    links: list[str] = []
+    seen: set[str] = set()
+
+    for a in soup.find_all("a", href=True):
+        href = str(a["href"]).strip()
+        label = a.get_text(" ", strip=True)
+
+        if not href.startswith(("http://", "https://")):
+            continue
+
+        if href in seen:
+            continue
+
+        seen.add(href)
+
+        if label:
+            links.append(f"{label}: {href}")
+        else:
+            links.append(href)
+
+    text = soup.get_text("\n", strip=True)
+
+    if links:
+        text += "\n\nLinks:\n" + "\n".join(links)
+
+    return text

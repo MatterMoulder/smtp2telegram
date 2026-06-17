@@ -4,10 +4,11 @@ import asyncio
 import logging
 import secrets
 import signal
+import ssl
 
 from aiosmtpd.smtp import AuthResult, LoginPassword, SMTP
 
-from app.config import load_config
+from app.config import load_config, AppConfig
 from app.smtp_handler import SMTPHandlerConfig, SMTPToTelegramHandler
 from app.telegram import TelegramClient
 from app.zitadel import ZitadelClient, ZitadelConfig
@@ -20,6 +21,24 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+def build_tls_context(config: AppConfig):
+    if not config.smtp_tls_enabled:
+        return None
+
+    if config.smtp_tls_cert_file is None:
+        raise RuntimeError("SMTP_TLS_CERT_FILE is required when SMTP_TLS_ENABLED=true")
+
+    if config.smtp_tls_key_file is None:
+        raise RuntimeError("SMTP_TLS_KEY_FILE is required when SMTP_TLS_ENABLED=true")
+
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+
+    context.load_cert_chain(
+        certfile=config.smtp_tls_cert_file,
+        keyfile=config.smtp_tls_key_file,
+    )
+
+    return context
 
 def build_authenticator(username: str, password: str):
     expected_login = username.encode("utf-8")
@@ -107,6 +126,8 @@ async def main_async() -> None:
 
     loop = asyncio.get_running_loop()
 
+    tls_context = build_tls_context(config)
+
     server = await loop.create_server(
         lambda: SMTP(
             handler,
@@ -115,6 +136,8 @@ async def main_async() -> None:
             authenticator=authenticator,
             auth_required=config.smtp_auth_required,
             auth_require_tls=config.smtp_auth_require_tls,
+            tls_context=tls_context,
+            require_starttls=config.smtp_require_starttls,
         ),
         host=config.smtp_host,
         port=config.smtp_port,

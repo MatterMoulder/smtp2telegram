@@ -319,7 +319,6 @@ class BuildRichHtmlTestCase(unittest.TestCase):
 
         rich_html = build_rich_html(mail)
 
-        # Message-ID is stored in mail object but not displayed in HTML
         self.assertIn("Test", rich_html)  # Subject should be present
         self.assertIn("Body", rich_html)  # Body should be present
 
