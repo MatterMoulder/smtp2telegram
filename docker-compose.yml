@@ -1,0 +1,35 @@
+services:
+  smtp2telegram:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smtp2telegram
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    ports:
+      - "2525:2525"
+
+    read_only: true
+
+    tmpfs:
+      - /tmp
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    secrets:
+      - zitadel_pkey
+
+    environment:
+      ZITADEL_PKEY_FILE: /run/secrets/zitadel_pkey
+
+
+secrets:
+  zitadel_pkey:
+    file: ./pkey.json
