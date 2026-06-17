@@ -228,8 +228,6 @@ def build_rich_html(mail: ParsedMail) -> str:
     otp = extract_otp(f"{mail.subject}\n{body}")
     title, kind = detect_mail_kind(mail.subject, body)
 
-    # Если OTP найден regex'ом, поднимаем письмо как verification code,
-    # даже если subject/body не содержит явных слов.
     if otp and kind == "generic":
         title = "🔐 Verification code"
         kind = "otp"
@@ -246,7 +244,6 @@ def build_rich_html(mail: ParsedMail) -> str:
     )
 
     links_html = format_links_details(body)
-    print(links_html)
     action_block = format_action_block(title, kind, otp, body)
     attachments_html = format_attachments(mail.attachments)
 

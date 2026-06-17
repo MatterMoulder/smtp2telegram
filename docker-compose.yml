@@ -41,6 +41,6 @@ secrets:
   smtp_tls_key:
     file: ./certs/smtp.key
 
-  # если нужен ZITADEL:
+  # if need ZITADEL:
   # zitadel_pkey:
   #   file: ./pkey.json
