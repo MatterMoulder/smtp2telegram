@@ -24,6 +24,8 @@ services:
       - ALL
 
     secrets:
+      - smtp_tls_cert
+      - smtp_tls_key
       - zitadel_pkey
 
     environment:
